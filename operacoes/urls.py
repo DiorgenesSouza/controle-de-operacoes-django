@@ -7,9 +7,28 @@ urlpatterns = [
     path("nova/", views.criar_operacao, name="criar_operacao"),
     path("editar/<int:pk>/", views.editar_operacao, name="editar_operacao"),
     path("excluir/<int:pk>/", views.excluir_operacao, name="excluir_operacao"),
+
     path(
         "marcar-entregue/<int:pk>/",
         views.marcar_entregue,
         name="marcar_entregue",
     ),
+
+    path(
+        "codigo-barras/<int:pk>/",
+        views.codigo_barras,
+        name="codigo_barras",
+    ),
+
+    path(
+    "consulta/",
+    views.consulta_rapida,
+    name="consulta_rapida",
+    ),
+
+    path(
+    "qrcode/<int:pk>/",
+    views.qr_code,
+    name="qr_code",
+   ),
 ]

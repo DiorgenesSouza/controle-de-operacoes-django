@@ -1,3 +1,10 @@
+import qrcode
+from io import BytesIO
+
+from barcode import Code128
+from barcode.writer import SVGWriter
+from django.http import HttpResponse
+
 from datetime import datetime
 
 from django.db.models import Q
@@ -174,3 +181,77 @@ def marcar_entregue(request, pk):
         operacao.save()
 
     return redirect("lista_operacoes")
+
+def codigo_barras(request, pk):
+    operacao = get_object_or_404(
+        Operacao,
+        pk=pk,
+        ativo=True
+    )
+
+    buffer = BytesIO()
+
+    codigo = Code128(
+        operacao.codigo,
+        writer=SVGWriter()
+    )
+
+    codigo.write(
+        buffer,
+        options={
+            "write_text": True,
+            "module_height": 15.0,
+            "font_size": 10,
+            "text_distance": 5,
+        }
+    )
+
+    return HttpResponse(
+        buffer.getvalue(),
+        content_type="image/svg+xml"
+    )
+
+def consulta_rapida(request):
+    termo = request.GET.get("q", "").strip()
+    operacao = None
+    mensagem = None
+
+    if termo:
+        operacao = (
+            Operacao.objects
+            .filter(ativo=True)
+            .filter(
+                Q(codigo__iexact=termo)
+                | Q(numero_nota__iexact=termo)
+            )
+            .first()
+        )
+
+        if not operacao:
+            mensagem = "Nenhuma operação encontrada."
+
+    return render(
+        request,
+        "operacoes/consulta_rapida.html",
+        {
+            "operacao": operacao,
+            "termo": termo,
+            "mensagem": mensagem,
+        }
+    )
+def qr_code(request, pk):
+    operacao = get_object_or_404(
+        Operacao,
+        pk=pk,
+        ativo=True
+    )
+
+    buffer = BytesIO()
+
+    qr = qrcode.make(operacao.codigo)
+    qr.save(buffer, format="PNG")
+
+    return HttpResponse(
+        buffer.getvalue(),
+        content_type="image/png"
+    )
